@@ -57,23 +57,45 @@ OPENAI_API_KEY=sk-your-actual-openai-key-here
 ANTHROPIC_API_KEY=sk-ant-your-actual-anthropic-key-here
 ```
 
-## Usage
+## Project Structure
+
+### Configuration Files
+- `.env` - API keys and configuration (create from .env.example)
+- `.env.example` - Template for environment configuration
+- `requirements.txt` - Python dependencies
+- `setup_venv.sh` - Virtual environment setup script
+- `.gitignore` - Git ignore patterns
+
+### OG Testing/
+Original experimental code and results have been moved to the `OG testing/` folder:
+
+**Core Modules:**
+- `llm_client.py` - Base LLM client with token counting (OpenAI & Anthropic)
+- `compressors.py` - Compression methods (Caveman, LLMLingua-2)
+- `experiment.py` - Experiment runner comparing methods
+- `example_usage.py` - Example usage demonstrations
+- `oreo_experiment.py` - "Oreo" technique experiments (compress middle content only)
+
+**Notebooks:**
+- `test.ipynb` - Factorial calculation comparison
+- `tinyllm.ipynb` - Latest experimental notebook
+
+**Results:**
+- `experiment_results.json` - Baseline experiment results
+- `oreo_experiment_results.json` - Oreo technique experiment results
+
+### Running Original Experiments
 
 ```bash
 # Make sure virtual environment is activated
 source venv/bin/activate
 
 # Run the example demos
-python example_usage.py
+python "OG testing/example_usage.py"
 
 # Run the full experiment
-python experiment.py
+python "OG testing/experiment.py"
+
+# Run the Oreo experiment
+python "OG testing/oreo_experiment.py"
 ```
-
-## Project Structure
-
-- `llm_client.py` - Base LLM client with token counting
-- `compressors.py` - Compression methods (Caveman, LLMLingua-2)
-- `experiment.py` - Experiment runner comparing methods
-- `example_usage.py` - Example usage demonstrations
-- `.env` - API keys and configuration (create from .env.example)
