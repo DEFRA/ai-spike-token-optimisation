@@ -17,19 +17,21 @@ Score interpretation:
 import nltk
 from nltk.translate.meteor_score import meteor_score
 from nltk.tokenize import word_tokenize
+import os
 from typing import Dict
 
 
 def setup_nltk_resources():
     """Download required NLTK resources (run once)."""
-    resources = ['wordnet', 'punkt', 'omw-1.4']
+    resources = ['wordnet', 'punkt_tab', 'omw-1.4']
     for resource in resources:
         try:
-            nltk.data.find(f'corpora/{resource}')
+            nltk.data.find(f'corpora/{resource}/')
         except LookupError:
             try:
-                nltk.data.find(f'tokenizers/{resource}')
+                nltk.data.find(f'tokenizers/{resource}/')
             except LookupError:
+                print('setting up nltk resources')
                 nltk.download(resource, quiet=True)
 
 
@@ -58,10 +60,7 @@ def calculate_meteor(reference: str, hypothesis: str) -> Dict:
         >>> print(f"Token reduction: {result['token_reduction']:.1%}")
     """
     # Ensure resources are available
-    try:
-        nltk.data.find('corpora/wordnet')
-    except LookupError:
-        setup_nltk_resources()
+    setup_nltk_resources()
 
     # Tokenize
     ref_tokens = word_tokenize(reference.lower())
