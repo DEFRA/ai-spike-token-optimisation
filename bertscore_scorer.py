@@ -55,7 +55,7 @@ from bert_score import score as bert_score
 from typing import Dict
 
 
-def calculate_bertscore(reference: str, hypothesis: str, model: str = "distilbert-base-uncased") -> Dict:
+def calculate_bertscore(reference: str, hypothesis: str, n_ref_tokens: int, n_hyp_tokens: int, model: str = "distilbert-base-uncased") -> Dict:
     """
     Calculate BERTScore between two texts with detailed metrics.
 
@@ -99,15 +99,16 @@ def calculate_bertscore(reference: str, hypothesis: str, model: str = "distilber
     # Calculate length metrics (split by whitespace)
     ref_tokens = reference.split()
     hyp_tokens = hypothesis.split()
-    length_ratio = len(hyp_tokens) / len(ref_tokens) if ref_tokens else 0.0
+    length_ratio = n_hyp_tokens / n_ref_tokens
     token_reduction = 1 - length_ratio
 
     return {
-        'precision': precision,
-        'recall': recall,
-        'f1': f1_score,
-        'reference_length': len(ref_tokens),
-        'hypothesis_length': len(hyp_tokens),
+        #'precision': precision,
+        #'recall': recall,
+        'method': 'bert',
+        'score': f1_score,
+        'reference_length': n_ref_tokens,
+        'hypothesis_length':n_hyp_tokens,
         'length_ratio': length_ratio,
         'token_reduction': token_reduction
     }

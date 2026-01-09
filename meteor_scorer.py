@@ -37,7 +37,6 @@ def setup_nltk_resources():
 
 def calculate_meteor(reference: str, hypothesis: str) -> Dict:
     """
-    hello
     Calculate METEOR score between two texts with detailed metrics.
 
     Args:
@@ -75,6 +74,7 @@ def calculate_meteor(reference: str, hypothesis: str) -> Dict:
     token_reduction = 1 - length_ratio
 
     return {
+        'method': 'meteor',
         'score': score,
         'reference_length': len(ref_tokens),
         'hypothesis_length': len(hyp_tokens),
