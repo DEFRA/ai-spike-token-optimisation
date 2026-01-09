@@ -69,17 +69,9 @@ def calculate_meteor(reference: str, hypothesis: str) -> Dict:
     # Calculate score
     score = meteor_score([ref_tokens], hyp_tokens)
 
-    # Calculate metrics
-    length_ratio = len(hyp_tokens) / len(ref_tokens) if ref_tokens else 0.0
-    token_reduction = 1 - length_ratio
-
     return {
         'method': 'meteor',
         'score': score,
-        'reference_length': len(ref_tokens),
-        'hypothesis_length': len(hyp_tokens),
-        'length_ratio': length_ratio,
-        'token_reduction': token_reduction
     }
 
 
@@ -100,7 +92,8 @@ if __name__ == "__main__":
     print(f"Reference:  {reference}")
     print(f"Hypothesis: {hypothesis}")
     print(f"\nMETEOR Score: {result['score']:.4f}")
-    print(f"Tokens: {result['reference_length']} → {result['hypothesis_length']}")
+    print(
+        f"Tokens: {result['reference_length']} → {result['hypothesis_length']}")
 
     # Example 2: Prompt compression evaluation
     print("\n\nExample 2: Prompt Compression Evaluation")
