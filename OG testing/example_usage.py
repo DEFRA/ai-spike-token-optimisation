@@ -77,7 +77,7 @@ def demo_llm_client():
         print(f"\nPrompt: {prompt}")
         print(f"Token count: {client.count_tokens(prompt)}")
 
-        response, stats = client.send_prompt(prompt, max_tokens=100)
+        response, stats = client.send_prompt(prompt)
 
         print(f"\nResponse: {response}")
         print(f"\nToken statistics:")
@@ -141,7 +141,6 @@ def demo_end_to_end():
     print("\n" + "-"*80)
     print("SENDING TO LLM")
     print("-"*80)
-    #FAA update 159 - 163
     try:
         # Respect DEFAULT_PROVIDER env var
         client = create_client()

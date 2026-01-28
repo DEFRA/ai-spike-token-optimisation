@@ -77,7 +77,8 @@ class OpenAIClient(LLMClient):
 class AnthropicClient(LLMClient):
     """Anthropic API client with token counting."""
 
-    def __init__(self, model: str = None, api_key: Optional[str] = None):
+    def __init__(self, model: str = "claude-3-5-sonnet-20241022", api_key: Optional[str] = None):
+
         try:
             from anthropic import Anthropic
         except ImportError:
@@ -128,9 +129,8 @@ def create_client(provider: str = "openai", **kwargs) -> LLMClient:
     Returns:
         LLMClient instance
     """
-    # FAA update 132, 133
-    if provider is None:
-        provider = os.getenv("DEFAULT_PROVIDER", "openai")
+    
+    provider = provider or os.getenv("DEFAULT_PROVIDER", "openai")
 
     if provider.lower() == "openai":
         return OpenAIClient(**kwargs)
