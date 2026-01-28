@@ -5,11 +5,7 @@ Example usage demonstrating individual components.
 from compressors import create_compressor
 from llm_client import create_client
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
-
-DEFAULT_PROVIDER = os.getenv("DEFAULT_PROVIDER", "openai")
 # Disable tokenizers parallelism warning
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
