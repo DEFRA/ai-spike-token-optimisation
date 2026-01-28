@@ -5,7 +5,11 @@ Example usage demonstrating individual components.
 from compressors import create_compressor
 from llm_client import create_client
 import os
+from dotenv import load_dotenv
 
+load_dotenv()
+
+DEFAULT_PROVIDER = os.getenv("DEFAULT_PROVIDER", "openai")
 # Disable tokenizers parallelism warning
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -72,7 +76,7 @@ def demo_llm_client():
     try:
         # Use environment variable for provider selection
         print("\nCreating LLM client from environment variables...")
-        client = create_client()
+        client = create_client(provider=DEFAULT_PROVIDER)
 
         print(f"\nPrompt: {prompt}")
         print(f"Token count: {client.count_tokens(prompt)}")
@@ -143,7 +147,7 @@ def demo_end_to_end():
     print("-"*80)
     try:
         # Respect DEFAULT_PROVIDER env var
-        client = create_client()
+        client = create_client(provider=DEFAULT_PROVIDER)
 
         print("\n=== Testing Basic LLM Client ===")
         response1, stats1 = client.send_prompt(prompt)
