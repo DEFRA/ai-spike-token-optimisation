@@ -453,14 +453,9 @@ def main():
         ),
     ]
 
-    # Create client (try OpenAI first, fall back to Anthropic)
+    # Use environment variable for provider selection
     print("Creating LLM client...")
-    try:
-        client = create_client(provider="openai", model="gpt-3.5-turbo")
-    except Exception as e:
-        print(f"Failed to create OpenAI client: {e}")
-        print("Trying Anthropic client...")
-        client = create_client(provider="anthropic")
+    client = create_client()
 
     # Run Oreo experiment
     experiment = OreoExperiment(client)
