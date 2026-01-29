@@ -71,15 +71,12 @@ Original experimental code and results have been moved to the `OG testing/` fold
 ### Running Original Experiments
 
 ```bash
-# Make sure virtual environment is activated
-source venv/bin/activate
-
 # Run the example demos
-python "OG testing/example_usage.py"
+uv run "OG testing/example_usage.py"
 
 # Run the full experiment
-python "OG testing/experiment.py"
+uv run "OG testing/experiment.py"
 
 # Run the Oreo experiment
-python "OG testing/oreo_experiment.py"
+uv run "OG testing/oreo_experiment.py"
 ```
