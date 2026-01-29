@@ -78,14 +78,12 @@ class AnthropicClient(LLMClient):
     """Anthropic API client with token counting."""
 
     def __init__(self, model: str = "claude-3-5-sonnet-20241022", api_key: Optional[str] = None):
-
         try:
             from anthropic import Anthropic
         except ImportError:
             raise ImportError("anthropic package not installed. Run: pip install anthropic")
 
-        # FAA update 87
-        self.model = model or os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")
+        self.model = model
         self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
         if not self.api_key:
             raise ValueError("Anthropic API key not found. Set ANTHROPIC_API_KEY environment variable.")
@@ -129,9 +127,6 @@ def create_client(provider: str = "openai", **kwargs) -> LLMClient:
     Returns:
         LLMClient instance
     """
-    
-    provider = provider or os.getenv("DEFAULT_PROVIDER", "openai")
-
     if provider.lower() == "openai":
         return OpenAIClient(**kwargs)
     elif provider.lower() == "anthropic":

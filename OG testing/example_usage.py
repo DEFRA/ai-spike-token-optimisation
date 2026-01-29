@@ -70,9 +70,8 @@ def demo_llm_client():
     prompt = "What is 2+2? Answer briefly."
 
     try:
-        # Use environment variable for provider selection
-        print("\nCreating LLM client from environment variables...")
-        client = create_client(provider=DEFAULT_PROVIDER)
+        print("\nTrying OpenAI client...")
+        client = create_client(provider="openai", model="gpt-3.5-turbo")
 
         print(f"\nPrompt: {prompt}")
         print(f"Token count: {client.count_tokens(prompt)}")
@@ -86,12 +85,27 @@ def demo_llm_client():
         print(f"  Total tokens: {stats['total_tokens']}")
 
     except Exception as e:
-        print(f"LLM client failed: {e}")
-        print("\nPlease set DEFAULT_PROVIDER, ANTHROPIC_MODEL (if using Anthropic), and appropriate API key in .env file.")
-        print("Example .env settings:")
-        print("  DEFAULT_PROVIDER=anthropic")
-        print("  ANTHROPIC_MODEL=claude-sonnet-4-20250514")
-        print("  ANTHROPIC_API_KEY=your-key-here")
+        print(f"OpenAI client failed: {e}")
+
+        try:
+            print("\nTrying Anthropic client...")
+            client = create_client(provider="anthropic")
+
+            print(f"\nPrompt: {prompt}")
+            print(f"Token count: {client.count_tokens(prompt)}")
+
+            response, stats = client.send_prompt(prompt, max_tokens=100)
+
+            print(f"\nResponse: {response}")
+            print(f"\nToken statistics:")
+            print(f"  Input tokens: {stats['input_tokens']}")
+            print(f"  Output tokens: {stats['output_tokens']}")
+            print(f"  Total tokens: {stats['total_tokens']}")
+
+        except Exception as e:
+            print(f"Anthropic client also failed: {e}")
+            print(
+                "\nPlease set OPENAI_API_KEY or ANTHROPIC_API_KEY environment variable.")
 
 
 def demo_end_to_end():
@@ -142,10 +156,9 @@ def demo_end_to_end():
     print("SENDING TO LLM")
     print("-"*80)
     try:
-        # Respect DEFAULT_PROVIDER env var
-        client = create_client(provider=DEFAULT_PROVIDER)
+        client = create_client(provider="openai", model="gpt-4o")
 
-        print("\n=== Testing Basic LLM Client ===")
+        print("\n--- Original prompt ---")
         response1, stats1 = client.send_prompt(prompt)
         print(f"Input tokens: {stats1['input_tokens']}")
         print(f"Output: {response1}...")
@@ -172,5 +185,5 @@ def demo_end_to_end():
 
 if __name__ == "__main__":
     demo_compression_methods()
-    demo_llm_client()
+    # demo_llm_client()
     demo_end_to_end()

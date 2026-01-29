@@ -209,7 +209,10 @@ class CompressionExperiment:
 
         print(f"\nResults saved to: {output_file}")
 
+
 def main():
+    """Example usage of the experiment runner."""
+
     # Test prompts
     test_prompts = [
         {
@@ -226,15 +229,21 @@ def main():
         },
     ]
 
-    # Use environment variable for provider selection
+    # Create client (defaults to OpenAI)
     print("Creating LLM client...")
-    client = create_client()
+    try:
+        client = create_client(provider="openai", model="gpt-4o")
+    except Exception as e:
+        print(f"Failed to create OpenAI client: {e}")
+        print("Trying Anthropic client...")
+        client = create_client(provider="anthropic")
 
     # Run experiment
     experiment = CompressionExperiment(client)
     results = experiment.run_comparison(
         prompts=test_prompts,
-        compression_methods=['none', 'caveman', 'llmlingua'],
+        compression_methods=['none', 'caveman',
+                             'llmlingua'],  # Start without llmlingua
         output_file='experiment_results.json'
     )
 
