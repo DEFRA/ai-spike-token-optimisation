@@ -4,8 +4,10 @@ Prompt compression methods for LLM inputs.
 
 import os
 import re
-from typing import Optional
 from abc import ABC, abstractmethod
+
+import torch
+from llmlingua import PromptCompressor
 
 # Disable tokenizers parallelism warning
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -17,7 +19,6 @@ class Compressor(ABC):
     @abstractmethod
     def compress(self, text: str) -> str:
         """Compress the input text."""
-        pass
 
     def get_compression_ratio(self, original: str, compressed: str) -> float:
         """Calculate compression ratio (compressed/original length)."""
@@ -42,22 +43,79 @@ class CavemanCompressor(Compressor):
         # Words to remove - articles, auxiliary verbs, some common prepositions
         self.stopwords = {
             # Articles
-            'a', 'an', 'the',
+            "a",
+            "an",
+            "the",
             # Auxiliary verbs
-            'is', 'are', 'was', 'were', 'am', 'be', 'been', 'being',
-            'has', 'have', 'had', 'having',
-            'do', 'does', 'did', 'doing',
-            'will', 'would', 'shall', 'should', 'may', 'might', 'must', 'can', 'could',
+            "is",
+            "are",
+            "was",
+            "were",
+            "am",
+            "be",
+            "been",
+            "being",
+            "has",
+            "have",
+            "had",
+            "having",
+            "do",
+            "does",
+            "did",
+            "doing",
+            "will",
+            "would",
+            "shall",
+            "should",
+            "may",
+            "might",
+            "must",
+            "can",
+            "could",
             # Common but often non-essential words
-            'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into',
-            'through', 'during', 'before', 'after', 'above', 'below', 'from',
-            'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again',
-            'further', 'then', 'once',
+            "of",
+            "at",
+            "by",
+            "for",
+            "with",
+            "about",
+            "against",
+            "between",
+            "into",
+            "through",
+            "during",
+            "before",
+            "after",
+            "above",
+            "below",
+            "from",
+            "up",
+            "down",
+            "in",
+            "out",
+            "on",
+            "off",
+            "over",
+            "under",
+            "again",
+            "further",
+            "then",
+            "once",
             # Pronouns (keeping some key ones, removing others)
-            'this', 'that', 'these', 'those',
+            "this",
+            "that",
+            "these",
+            "those",
             # Other
-            'there', 'here', 'where',
-            'very', 'just', 'really', 'quite', 'too', 'so',
+            "there",
+            "here",
+            "where",
+            "very",
+            "just",
+            "really",
+            "quite",
+            "too",
+            "so",
         }
 
     def compress(self, text: str) -> str:
@@ -66,12 +124,12 @@ class CavemanCompressor(Compressor):
         Preserves sentence structure but creates "caveman" style English.
         """
         # Split into sentences to preserve some structure
-        sentences = re.split(r'([.!?]+)', text)
+        sentences = re.split(r"([.!?]+)", text)
 
         compressed_sentences = []
         for i in range(0, len(sentences), 2):
             sentence = sentences[i]
-            punctuation = sentences[i + 1] if i + 1 < len(sentences) else ''
+            punctuation = sentences[i + 1] if i + 1 < len(sentences) else ""
 
             # Tokenize words (simple split, preserving contractions)
             words = sentence.split()
@@ -80,22 +138,21 @@ class CavemanCompressor(Compressor):
             filtered_words = []
             for word in words:
                 # Extract the actual word (lowercase) for checking
-                clean_word = re.sub(r'[^\w\']', '', word.lower())
+                clean_word = re.sub(r"[^\w\']", "", word.lower())
 
                 # Keep if not a stopword, or if it's at the start of sentence
                 if clean_word not in self.stopwords or len(filtered_words) == 0:
                     filtered_words.append(word)
 
             if filtered_words:
-                compressed_sentences.append(' '.join(filtered_words) + punctuation)
+                compressed_sentences.append(" ".join(filtered_words) + punctuation)
 
-        result = ' '.join(compressed_sentences).strip()
+        result = " ".join(compressed_sentences).strip()
 
         # Clean up extra spaces
-        result = re.sub(r'\s+([.!?,;:])', r'\1', result)
-        result = re.sub(r'\s+', ' ', result)
+        result = re.sub(r"\s+([.!?,;:])", r"\1", result)
 
-        return result
+        return re.sub(r"\s+", " ", result)
 
 
 class LLMLinguaCompressor(Compressor):
@@ -104,7 +161,7 @@ class LLMLinguaCompressor(Compressor):
     Uses trained models for selective prompt compression.
     """
 
-    def __init__(self, target_token: Optional[int] = None, rate: Optional[float] = 0.5):
+    def __init__(self, target_token: int | None = None, rate: float | None = 0.5):
         """
         Initialize LLMLingua-2 compressor.
 
@@ -112,19 +169,12 @@ class LLMLinguaCompressor(Compressor):
             target_token: Target number of tokens (if specified, rate is ignored)
             rate: Compression rate (0.0 to 1.0), lower = more compression
         """
-        try:
-            from llmlingua import PromptCompressor
-            import torch
-        except ImportError:
-            raise ImportError(
-                "llmlingua package not installed. Run: pip install llmlingua\n"
-                "Note: This also requires transformers and torch."
-            )
-
         # Detect and use the best available device
         if torch.backends.mps.is_available():
             device = "mps"
-            print("Initializing LLMLingua-2 compressor (using MPS - Apple Silicon GPU)...")
+            print(
+                "Initializing LLMLingua-2 compressor (using MPS - Apple Silicon GPU)..."
+            )
         elif torch.cuda.is_available():
             device = "cuda"
             print("Initializing LLMLingua-2 compressor (using CUDA)...")
@@ -150,20 +200,20 @@ class LLMLinguaCompressor(Compressor):
         # LLMLingua-2 expects text as a list of strings or single string
         # Only pass target_token if it's set, otherwise use rate
         compress_kwargs = {
-            'force_tokens': ['\n', '?', '!', '.'],  # Preserve important punctuation
-            'use_sentence_level_filter': True,
-            'use_context_level_filter': True,
-            'use_token_level_filter': True,
+            "force_tokens": ["\n", "?", "!", "."],  # Preserve important punctuation
+            "use_sentence_level_filter": True,
+            "use_context_level_filter": True,
+            "use_token_level_filter": True,
         }
 
         if self.target_token is not None:
-            compress_kwargs['target_token'] = self.target_token
+            compress_kwargs["target_token"] = self.target_token
         else:
-            compress_kwargs['rate'] = self.rate
+            compress_kwargs["rate"] = self.rate
 
         result = self.compressor.compress_prompt(text, **compress_kwargs)
 
-        return result['compressed_prompt']
+        return result["compressed_prompt"]
 
 
 def create_compressor(method: str, **kwargs) -> Compressor:
@@ -179,14 +229,17 @@ def create_compressor(method: str, **kwargs) -> Compressor:
     """
     method = method.lower()
 
-    if method == 'none':
+    if method == "none":
         return NoCompression()
-    elif method == 'caveman':
+
+    if method == "caveman":
         return CavemanCompressor()
-    elif method == 'llmlingua' or method == 'llmlingua2':
+
+    if method == "llmlingua" or method == "llmlingua2":
         return LLMLinguaCompressor(**kwargs)
-    else:
-        raise ValueError(
-            f"Unknown compression method: {method}. "
-            f"Use 'none', 'caveman', or 'llmlingua'."
-        )
+
+    msg = (
+        f"Unknown compression method: {method}. Use 'none', 'caveman', or 'llmlingua'."
+    )
+
+    raise ValueError(msg)

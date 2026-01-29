@@ -22,25 +22,9 @@ Reducing input tokens provides multiple benefits:
 ### Quick Setup (Recommended)
 
 ```bash
-# Run the setup script
-./setup_venv.sh
-```
-
-### Manual Setup
-
-```bash
-# Create virtual environment
-python3 -m venv venv
-
-# Activate virtual environment
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Copy and configure .env file
+uv sync --locked
+uv run task create-kernel
 cp .env.example .env
-# Edit .env with your actual API keys
 ```
 
 ## Configuration

@@ -2,13 +2,14 @@
 Experiment runner to compare compression methods.
 """
 
-from compressors import create_compressor, Compressor
-from llm_client import create_client, LLMClient
-import os
 import json
+import os
 import time
-from typing import List, Dict, Any
-from datetime import datetime
+from datetime import UTC, datetime
+from typing import Any
+
+from compressors import Compressor, create_compressor
+from llm_client import LLMClient, create_client
 
 # Disable tokenizers parallelism warning
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -31,8 +32,8 @@ class CompressionExperiment:
         prompt: str,
         compressor: Compressor,
         method_name: str,
-        task_description: str = ""
-    ) -> Dict[str, Any]:
+        task_description: str = "",
+    ) -> dict[str, Any]:
         """
         Run a single test with one compression method.
 
@@ -58,11 +59,13 @@ class CompressionExperiment:
         response, token_stats = self.client.send_prompt(compressed_prompt)
 
         # Calculate metrics
-        compression_ratio = len(compressed_prompt) / \
-            len(prompt) if len(prompt) > 0 else 1.0
+        compression_ratio = (
+            len(compressed_prompt) / len(prompt) if len(prompt) > 0 else 1.0
+        )
         token_reduction = original_tokens - compressed_tokens
         token_reduction_pct = (
-            token_reduction / original_tokens * 100) if original_tokens > 0 else 0
+            (token_reduction / original_tokens * 100) if original_tokens > 0 else 0
+        )
 
         return {
             "method": method_name,
@@ -85,10 +88,10 @@ class CompressionExperiment:
 
     def run_comparison(
         self,
-        prompts: List[Dict[str, str]],
-        compression_methods: List[str] = None,
-        output_file: str = None
-    ) -> List[Dict[str, Any]]:
+        prompts: list[dict[str, str]],
+        compression_methods: list[str] = None,
+        output_file: str = None,
+    ) -> list[dict[str, Any]]:
         """
         Run comparison across multiple prompts and compression methods.
 
@@ -101,21 +104,21 @@ class CompressionExperiment:
             List of all test results
         """
         if compression_methods is None:
-            compression_methods = ['none', 'caveman', 'llmlingua']
+            compression_methods = ["none", "caveman", "llmlingua"]
 
         all_results = []
 
-        print(f"\n{'='*80}")
-        print(f"Starting Compression Experiment")
-        print(f"{'='*80}")
+        print(f"\n{'=' * 80}")
+        print("Starting Compression Experiment")
+        print(f"{'=' * 80}")
         print(f"Number of test prompts: {len(prompts)}")
         print(f"Compression methods: {', '.join(compression_methods)}")
         print(f"LLM Client: {self.client.__class__.__name__}")
-        print(f"{'='*80}\n")
+        print(f"{'=' * 80}\n")
 
         for idx, prompt_data in enumerate(prompts):
-            prompt = prompt_data['prompt']
-            task_desc = prompt_data.get('task_description', f'Task {idx + 1}')
+            prompt = prompt_data["prompt"]
+            task_desc = prompt_data.get("task_description", f"Task {idx + 1}")
 
             print(f"\n--- Test {idx + 1}/{len(prompts)}: {task_desc} ---")
 
@@ -123,7 +126,7 @@ class CompressionExperiment:
                 print(f"\nTesting method: {method}")
 
                 # Create compressor
-                if method == 'llmlingua':
+                if method == "llmlingua":
                     compressor = create_compressor(method, rate=0.5)
                 else:
                     compressor = create_compressor(method)
@@ -134,18 +137,15 @@ class CompressionExperiment:
                         prompt=prompt,
                         compressor=compressor,
                         method_name=method,
-                        task_description=task_desc
+                        task_description=task_desc,
                     )
                     all_results.append(result)
 
                     # Print summary
                     print(f"  Original tokens: {result['original_tokens']}")
-                    print(
-                        f"  Compressed tokens: {result['compressed_tokens']}")
-                    print(
-                        f"  Token reduction: {result['token_reduction_pct']:.1f}%")
-                    print(
-                        f"  Response length: {len(result['response'])} chars")
+                    print(f"  Compressed tokens: {result['compressed_tokens']}")
+                    print(f"  Token reduction: {result['token_reduction_pct']:.1f}%")
+                    print(f"  Response length: {len(result['response'])} chars")
 
                 except Exception as e:
                     print(f"  ERROR: {str(e)}")
@@ -160,16 +160,16 @@ class CompressionExperiment:
 
         return all_results
 
-    def _print_summary(self, results: List[Dict[str, Any]]):
+    def _print_summary(self, results: list[dict[str, Any]]):
         """Print summary statistics."""
-        print(f"\n{'='*80}")
+        print(f"\n{'=' * 80}")
         print("EXPERIMENT SUMMARY")
-        print(f"{'='*80}\n")
+        print(f"{'=' * 80}\n")
 
         # Group by method
         by_method = {}
         for result in results:
-            method = result['method']
+            method = result["method"]
             if method not in by_method:
                 by_method[method] = []
             by_method[method].append(result)
@@ -179,32 +179,30 @@ class CompressionExperiment:
             print(f"\n{method.upper()} METHOD:")
             print("-" * 40)
 
-            avg_token_reduction = sum(r['token_reduction_pct']
-                                      for r in method_results) / len(method_results)
-            avg_compression_time = sum(r['compression_time_sec']
-                                       for r in method_results) / len(method_results)
-            total_input_tokens = sum(r['input_tokens_used']
-                                     for r in method_results)
-            total_output_tokens = sum(r['output_tokens_used']
-                                      for r in method_results)
+            avg_token_reduction = sum(
+                r["token_reduction_pct"] for r in method_results
+            ) / len(method_results)
+            avg_compression_time = sum(
+                r["compression_time_sec"] for r in method_results
+            ) / len(method_results)
+            total_input_tokens = sum(r["input_tokens_used"] for r in method_results)
+            total_output_tokens = sum(r["output_tokens_used"] for r in method_results)
 
             print(f"  Average token reduction: {avg_token_reduction:.1f}%")
-            print(
-                f"  Average compression time: {avg_compression_time:.4f} sec")
+            print(f"  Average compression time: {avg_compression_time:.4f} sec")
             print(f"  Total input tokens used: {total_input_tokens}")
             print(f"  Total output tokens used: {total_output_tokens}")
-            print(
-                f"  Total tokens used: {total_input_tokens + total_output_tokens}")
+            print(f"  Total tokens used: {total_input_tokens + total_output_tokens}")
 
-    def _save_results(self, results: List[Dict[str, Any]], output_file: str):
+    def _save_results(self, results: list[dict[str, Any]], output_file: str):
         """Save results to JSON file."""
         output_data = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "client": self.client.__class__.__name__,
-            "results": results
+            "results": results,
         }
 
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(output_data, f, indent=2)
 
         print(f"\nResults saved to: {output_file}")
@@ -217,15 +215,15 @@ def main():
     test_prompts = [
         {
             "task_description": "Question Answering",
-            "prompt": "What is the capital of France? Please provide a detailed answer explaining the history and significance of this city."
+            "prompt": "What is the capital of France? Please provide a detailed answer explaining the history and significance of this city.",
         },
         {
             "task_description": "Code Generation",
-            "prompt": "Write a Python function that takes a list of numbers and returns the sum of all the even numbers in the list. Make sure to include proper error handling and documentation."
+            "prompt": "Write a Python function that takes a list of numbers and returns the sum of all the even numbers in the list. Make sure to include proper error handling and documentation.",
         },
         {
             "task_description": "Text Summarization",
-            "prompt": "Summarize the following text: The quick brown fox jumps over the lazy dog. This is a common pangram used to test typewriters and computer keyboards because it contains every letter of the alphabet. It has been used since at least the late 1800s and remains popular today."
+            "prompt": "Summarize the following text: The quick brown fox jumps over the lazy dog. This is a common pangram used to test typewriters and computer keyboards because it contains every letter of the alphabet. It has been used since at least the late 1800s and remains popular today.",
         },
     ]
 
@@ -240,11 +238,11 @@ def main():
 
     # Run experiment
     experiment = CompressionExperiment(client)
-    results = experiment.run_comparison(
+
+    experiment.run_comparison(
         prompts=test_prompts,
-        compression_methods=['none', 'caveman',
-                             'llmlingua'],  # Start without llmlingua
-        output_file='experiment_results.json'
+        compression_methods=["none", "caveman", "llmlingua"],  # Start without llmlingua
+        output_file="experiment_results.json",
     )
 
 
