@@ -39,19 +39,23 @@ class LLMClient(ABC):
 class OpenAIClient(LLMClient):
     """OpenAI API client with token counting."""
 
-    def __init__(self, model: str = "gpt-4", api_key: Optional[str] = None):
+    def __init__(self, model: str = None, api_key: Optional[str] = None):
         try:
             from openai import OpenAI
         except ImportError:
             raise ImportError("openai package not installed. Run: pip install openai")
 
-        self.model = model
+        self.model = model or os.getenv("OPENAI_MODEL")
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+
+        if not self.model:
+            raise ValueError("OpenAI model not specified. Set OPENAI_MODEL environment variable.")
+
         if not self.api_key:
             raise ValueError("OpenAI API key not found. Set OPENAI_API_KEY environment variable.")
 
         self.client = OpenAI(api_key=self.api_key)
-        self.encoding = tiktoken.encoding_for_model(model)
+        self.encoding = tiktoken.encoding_for_model(self.model)
 
     def send_prompt(self, prompt: str, **kwargs) -> Tuple[str, Dict[str, int]]:
         """Send prompt to OpenAI and return response with token counts."""
@@ -77,14 +81,18 @@ class OpenAIClient(LLMClient):
 class AnthropicClient(LLMClient):
     """Anthropic API client with token counting."""
 
-    def __init__(self, model: str = "claude-3-5-sonnet-20241022", api_key: Optional[str] = None):
+    def __init__(self, model: str = None, api_key: str = None):
         try:
             from anthropic import Anthropic
         except ImportError:
             raise ImportError("anthropic package not installed. Run: pip install anthropic")
 
-        self.model = model
+        self.model = model or os.getenv("ANTHROPIC_MODEL")
         self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
+
+        if not self.model:
+            raise ValueError("Anthropic model not specified. Set ANTHROPIC_MODEL environment variable.")
+
         if not self.api_key:
             raise ValueError("Anthropic API key not found. Set ANTHROPIC_API_KEY environment variable.")
 
