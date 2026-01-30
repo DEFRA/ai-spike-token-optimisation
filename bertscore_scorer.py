@@ -52,10 +52,11 @@ Recall	≥ 0.80	Compressed output captured the meaning
 """
 
 from bert_score import score as bert_score
-from typing import Dict
 
 
-def calculate_bertscore(reference: str, hypothesis: str, model: str = "distilbert-base-uncased") -> Dict:
+def calculate_bertscore(
+    reference: str, hypothesis: str, model: str = "distilbert-base-uncased"
+) -> dict:
     """
     Calculate BERTScore between two texts with detailed metrics.
 
@@ -84,23 +85,18 @@ def calculate_bertscore(reference: str, hypothesis: str, model: str = "distilber
         >>> print(f"Token reduction: {result['token_reduction']:.1%}")
     """
     # Calculate BERTScore (returns tensors)
-    P, R, F1 = bert_score(
-        [hypothesis],
-        [reference],
-        model_type=model,
-        verbose=False
-    )
+    P, R, F1 = bert_score([hypothesis], [reference], model_type=model, verbose=False)  # noqa: N806
 
     # Convert to Python floats
-    precision = P.item()
-    recall = R.item()
+    precision = P.item()  # noqa: F841
+    recall = R.item()  # noqa: F841
     f1_score = F1.item()
 
     return {
         # 'precision': precision,
         # 'recall': recall,
-        'method': 'bert',
-        'score': f1_score,
+        "method": "bert",
+        "score": f1_score,
     }
 
 
@@ -125,8 +121,7 @@ if __name__ == "__main__":
     print(f"\nBERTScore F1: {result['f1']:.4f}")
     print(f"Precision: {result['precision']:.4f}")
     print(f"Recall: {result['recall']:.4f}")
-    print(
-        f"Tokens: {result['reference_length']} → {result['hypothesis_length']}")
+    print(f"Tokens: {result['reference_length']} → {result['hypothesis_length']}")
 
     # Example 2: Prompt compression evaluation
     print("\n\nExample 2: Prompt Compression Evaluation")
@@ -138,11 +133,11 @@ if __name__ == "__main__":
     print("Calculating BERTScore...")
     result = calculate_bertscore(control, compressed)
 
-    print(f"Control Output:")
+    print("Control Output:")
     print(f"  {control}")
-    print(f"\nCompressed Output:")
+    print("\nCompressed Output:")
     print(f"  {compressed}")
-    print(f"\nResults:")
+    print("\nResults:")
     print(f"  BERTScore F1: {result['f1']:.4f}")
     print(f"  Precision: {result['precision']:.4f}")
     print(f"  Recall: {result['recall']:.4f}")

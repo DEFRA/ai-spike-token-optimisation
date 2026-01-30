@@ -15,27 +15,25 @@ Score interpretation:
 """
 
 import nltk
-from nltk.translate.meteor_score import meteor_score
 from nltk.tokenize import word_tokenize
-import os
-from typing import Dict
+from nltk.translate.meteor_score import meteor_score
 
 
 def setup_nltk_resources():
     """Download required NLTK resources (run once)."""
-    resources = ['wordnet', 'punkt_tab', 'omw-1.4']
+    resources = ["wordnet", "punkt_tab", "omw-1.4"]
     for resource in resources:
         try:
-            nltk.data.find(f'corpora/{resource}/')
+            nltk.data.find(f"corpora/{resource}/")
         except LookupError:
             try:
-                nltk.data.find(f'tokenizers/{resource}/')
+                nltk.data.find(f"tokenizers/{resource}/")
             except LookupError:
-                print('setting up nltk resources')
+                print("setting up nltk resources")
                 nltk.download(resource, quiet=True)
 
 
-def calculate_meteor(reference: str, hypothesis: str) -> Dict:
+def calculate_meteor(reference: str, hypothesis: str) -> dict:
     """
     Calculate METEOR score between two texts with detailed metrics.
 
@@ -70,8 +68,8 @@ def calculate_meteor(reference: str, hypothesis: str) -> Dict:
     score = meteor_score([ref_tokens], hyp_tokens)
 
     return {
-        'method': 'meteor',
-        'score': score,
+        "method": "meteor",
+        "score": score,
     }
 
 
@@ -92,8 +90,7 @@ if __name__ == "__main__":
     print(f"Reference:  {reference}")
     print(f"Hypothesis: {hypothesis}")
     print(f"\nMETEOR Score: {result['score']:.4f}")
-    print(
-        f"Tokens: {result['reference_length']} → {result['hypothesis_length']}")
+    print(f"Tokens: {result['reference_length']} → {result['hypothesis_length']}")
 
     # Example 2: Prompt compression evaluation
     print("\n\nExample 2: Prompt Compression Evaluation")
@@ -104,11 +101,11 @@ if __name__ == "__main__":
 
     result = calculate_meteor(control, compressed)
 
-    print(f"Control Output:")
+    print("Control Output:")
     print(f"  {control}")
-    print(f"\nCompressed Output:")
+    print("\nCompressed Output:")
     print(f"  {compressed}")
-    print(f"\nResults:")
+    print("\nResults:")
     print(f"  METEOR Score: {result['score']:.4f}")
     print(f"  Control tokens: {result['reference_length']}")
     print(f"  Compressed tokens: {result['hypothesis_length']}")

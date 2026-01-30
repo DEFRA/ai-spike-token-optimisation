@@ -22,25 +22,9 @@ Reducing input tokens provides multiple benefits:
 ### Quick Setup (Recommended)
 
 ```bash
-# Run the setup script
-./setup_venv.sh
-```
-
-### Manual Setup
-
-```bash
-# Create virtual environment
-python3 -m venv venv
-
-# Activate virtual environment
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Copy and configure .env file
+uv sync --locked
+uv run task create-kernel
 cp .env.example .env
-# Edit .env with your actual API keys
 ```
 
 ## Configuration
@@ -87,15 +71,12 @@ Original experimental code and results have been moved to the `OG testing/` fold
 ### Running Original Experiments
 
 ```bash
-# Make sure virtual environment is activated
-source venv/bin/activate
-
 # Run the example demos
-python "OG testing/example_usage.py"
+uv run "OG testing/example_usage.py"
 
 # Run the full experiment
-python "OG testing/experiment.py"
+uv run "OG testing/experiment.py"
 
 # Run the Oreo experiment
-python "OG testing/oreo_experiment.py"
+uv run "OG testing/oreo_experiment.py"
 ```

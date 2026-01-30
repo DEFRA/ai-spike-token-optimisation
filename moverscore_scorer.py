@@ -17,15 +17,15 @@ Installation:
     pip install moverscore
 """
 
-from moverscore_v2 import get_idf_dict, word_mover_score
-from typing import Dict
 import warnings
 
+from moverscore_v2 import get_idf_dict, word_mover_score
+
 # Suppress warnings
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 
-def calculate_moverscore(reference: str, hypothesis: str) -> Dict:
+def calculate_moverscore(reference: str, hypothesis: str) -> dict:
     """
     Calculate MoverScore between two texts with detailed metrics.
 
@@ -64,8 +64,8 @@ def calculate_moverscore(reference: str, hypothesis: str) -> Dict:
         idf_dict_ref,
         idf_dict_hyp,
         stop_words=[],  # Don't remove stop words
-        n_gram=1,       # Unigram matching
-        remove_subwords=True
+        n_gram=1,  # Unigram matching
+        remove_subwords=True,
     )
 
     # Extract score (returns a list, we want the first element)
@@ -78,11 +78,11 @@ def calculate_moverscore(reference: str, hypothesis: str) -> Dict:
     token_reduction = 1 - length_ratio
 
     return {
-        'score': score,
-        'reference_length': len(ref_tokens),
-        'hypothesis_length': len(hyp_tokens),
-        'length_ratio': length_ratio,
-        'token_reduction': token_reduction
+        "score": score,
+        "reference_length": len(ref_tokens),
+        "hypothesis_length": len(hyp_tokens),
+        "length_ratio": length_ratio,
+        "token_reduction": token_reduction,
     }
 
 
@@ -115,11 +115,11 @@ if __name__ == "__main__":
 
     result = calculate_moverscore(control, compressed)
 
-    print(f"Control Output:")
+    print("Control Output:")
     print(f"  {control}")
-    print(f"\nCompressed Output:")
+    print("\nCompressed Output:")
     print(f"  {compressed}")
-    print(f"\nResults:")
+    print("\nResults:")
     print(f"  MoverScore: {result['score']:.4f}")
     print(f"  Control tokens: {result['reference_length']}")
     print(f"  Compressed tokens: {result['hypothesis_length']}")

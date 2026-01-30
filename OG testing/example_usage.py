@@ -2,9 +2,10 @@
 Example usage demonstrating individual components.
 """
 
+import os
+
 from compressors import create_compressor
 from llm_client import create_client
-import os
 
 # Disable tokenizers parallelism warning
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -12,9 +13,9 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 def demo_compression_methods():
     """Demonstrate different compression methods."""
-    print("="*80)
+    print("=" * 80)
     print("COMPRESSION METHODS DEMO")
-    print("="*80)
+    print("=" * 80)
 
     test_text = """
     The quick brown fox jumps over the lazy dog. This is a very common pangram
@@ -27,45 +28,45 @@ def demo_compression_methods():
     print(test_text)
 
     # No compression
-    print("\n" + "-"*80)
+    print("\n" + "-" * 80)
     print("NO COMPRESSION (Baseline):")
-    print("-"*80)
-    no_comp = create_compressor('none')
+    print("-" * 80)
+    no_comp = create_compressor("none")
     result = no_comp.compress(test_text)
     print(f"Result ({len(result)} chars):")
     print(result)
 
     # Caveman compression
-    print("\n" + "-"*80)
+    print("\n" + "-" * 80)
     print("CAVEMAN COMPRESSION:")
-    print("-"*80)
-    caveman = create_compressor('caveman')
+    print("-" * 80)
+    caveman = create_compressor("caveman")
     result = caveman.compress(test_text)
     print(f"Result ({len(result)} chars):")
     print(result)
-    print(
-        f"Compression ratio: {caveman.get_compression_ratio(test_text, result):.2%}")
+    print(f"Compression ratio: {caveman.get_compression_ratio(test_text, result):.2%}")
 
     # LLMLingua compression (if available)
-    print("\n" + "-"*80)
+    print("\n" + "-" * 80)
     print("LLMLINGUA-2 COMPRESSION:")
-    print("-"*80)
+    print("-" * 80)
     try:
-        llmlingua = create_compressor('llmlingua', rate=0.5)
+        llmlingua = create_compressor("llmlingua", rate=0.5)
         result = llmlingua.compress(test_text)
         print(f"Result ({len(result)} chars):")
         print(result)
         print(
-            f"Compression ratio: {llmlingua.get_compression_ratio(test_text, result):.2%}")
+            f"Compression ratio: {llmlingua.get_compression_ratio(test_text, result):.2%}"
+        )
     except ImportError as e:
         print(f"LLMLingua not available: {e}")
 
 
 def demo_llm_client():
     """Demonstrate LLM client with token counting."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("LLM CLIENT DEMO")
-    print("="*80)
+    print("=" * 80)
 
     prompt = "What is 2+2? Answer briefly."
 
@@ -79,7 +80,7 @@ def demo_llm_client():
         response, stats = client.send_prompt(prompt)
 
         print(f"\nResponse: {response}")
-        print(f"\nToken statistics:")
+        print("\nToken statistics:")
         print(f"  Input tokens: {stats['input_tokens']}")
         print(f"  Output tokens: {stats['output_tokens']}")
         print(f"  Total tokens: {stats['total_tokens']}")
@@ -97,7 +98,7 @@ def demo_llm_client():
             response, stats = client.send_prompt(prompt, max_tokens=100)
 
             print(f"\nResponse: {response}")
-            print(f"\nToken statistics:")
+            print("\nToken statistics:")
             print(f"  Input tokens: {stats['input_tokens']}")
             print(f"  Output tokens: {stats['output_tokens']}")
             print(f"  Total tokens: {stats['total_tokens']}")
@@ -105,14 +106,15 @@ def demo_llm_client():
         except Exception as e:
             print(f"Anthropic client also failed: {e}")
             print(
-                "\nPlease set OPENAI_API_KEY or ANTHROPIC_API_KEY environment variable.")
+                "\nPlease set OPENAI_API_KEY or ANTHROPIC_API_KEY environment variable."
+            )
 
 
 def demo_end_to_end():
     """Demonstrate end-to-end compression + LLM."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("END-TO-END DEMO: COMPRESSION + LLM")
-    print("="*80)
+    print("=" * 80)
 
     prompt = """
     Please write a short Python function that calculates the factorial of a number.
@@ -124,37 +126,39 @@ def demo_end_to_end():
     print(prompt)
 
     # Compress with caveman
-    print("\n" + "-"*80)
+    print("\n" + "-" * 80)
     print("CAVEMAN COMPRESSION")
-    print("-"*80)
-    caveman = create_compressor('caveman')
+    print("-" * 80)
+    caveman = create_compressor("caveman")
     caveman_compressed = caveman.compress(prompt)
 
     print(f"Caveman compressed ({len(caveman_compressed)} chars):")
     print(caveman_compressed)
     print(
-        f"Compression ratio: {caveman.get_compression_ratio(prompt, caveman_compressed):.2%}")
+        f"Compression ratio: {caveman.get_compression_ratio(prompt, caveman_compressed):.2%}"
+    )
 
     # Compress with LLMLingua-2
-    print("\n" + "-"*80)
+    print("\n" + "-" * 80)
     print("LLMLINGUA-2 COMPRESSION")
-    print("-"*80)
+    print("-" * 80)
     try:
-        llmlingua = create_compressor('llmlingua', rate=0.5)
+        llmlingua = create_compressor("llmlingua", rate=0.5)
         llmlingua_compressed = llmlingua.compress(prompt)
 
         print(f"LLMLingua-2 compressed ({len(llmlingua_compressed)} chars):")
         print(llmlingua_compressed)
         print(
-            f"Compression ratio: {llmlingua.get_compression_ratio(prompt, llmlingua_compressed):.2%}")
+            f"Compression ratio: {llmlingua.get_compression_ratio(prompt, llmlingua_compressed):.2%}"
+        )
     except Exception as e:
         print(f"LLMLingua-2 not available: {e}")
         llmlingua_compressed = None
 
     # Send to LLM
-    print("\n" + "-"*80)
+    print("\n" + "-" * 80)
     print("SENDING TO LLM")
-    print("-"*80)
+    print("-" * 80)
     try:
         client = create_client(provider="openai", model="gpt-4o")
 
@@ -167,7 +171,8 @@ def demo_end_to_end():
         response2, stats2 = client.send_prompt(caveman_compressed)
         print(f"Input tokens: {stats2['input_tokens']}")
         print(
-            f"Token savings: {stats1['input_tokens'] - stats2['input_tokens']} ({(stats1['input_tokens'] - stats2['input_tokens']) / stats1['input_tokens'] * 100:.1f}%)")
+            f"Token savings: {stats1['input_tokens'] - stats2['input_tokens']} ({(stats1['input_tokens'] - stats2['input_tokens']) / stats1['input_tokens'] * 100:.1f}%)"
+        )
         print(f"Output: {response2}...")
 
         if llmlingua_compressed:
@@ -175,7 +180,8 @@ def demo_end_to_end():
             response3, stats3 = client.send_prompt(llmlingua_compressed)
             print(f"Input tokens: {stats3['input_tokens']}")
             print(
-                f"Token savings: {stats1['input_tokens'] - stats3['input_tokens']} ({(stats1['input_tokens'] - stats3['input_tokens']) / stats1['input_tokens'] * 100:.1f}%)")
+                f"Token savings: {stats1['input_tokens'] - stats3['input_tokens']} ({(stats1['input_tokens'] - stats3['input_tokens']) / stats1['input_tokens'] * 100:.1f}%)"
+            )
             print(f"Output: {response3}...")
 
     except Exception as e:

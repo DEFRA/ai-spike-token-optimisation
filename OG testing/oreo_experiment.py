@@ -10,18 +10,18 @@ This should maximize token savings on the bulk content while maintaining
 clear instructions and queries for the LLM.
 """
 
-import os
 import json
+import os
 import time
-from typing import List, Dict, Any, Tuple
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import UTC, datetime
+from typing import Any
 
 # Disable tokenizers parallelism warning
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-from llm_client import create_client, LLMClient
-from compressors import create_compressor, Compressor
+from compressors import Compressor, create_compressor
+from llm_client import LLMClient, create_client
 
 
 @dataclass
@@ -35,6 +35,7 @@ class OreoPrompt:
         query: Bottom cookie - the specific question/task
         task_description: Human-readable description of the task
     """
+
     system_instructions: str
     content: str
     query: str
@@ -57,7 +58,7 @@ class OreoExperiment:
         self,
         oreo_prompt: OreoPrompt,
         compress_content: bool = False,
-        compressor: Compressor = None
+        compressor: Compressor = None,
     ) -> str:
         """
         Build a complete prompt from Oreo components.
@@ -95,8 +96,8 @@ class OreoExperiment:
         oreo_prompt: OreoPrompt,
         compressor: Compressor,
         method_name: str,
-        compress_content: bool = True
-    ) -> Dict[str, Any]:
+        compress_content: bool = True,
+    ) -> dict[str, Any]:
         """
         Run a single test with the Oreo technique.
 
@@ -112,18 +113,24 @@ class OreoExperiment:
         # Build the full prompt (with or without compression)
         start_time = time.time()
         full_prompt = self.build_full_prompt(
-            oreo_prompt,
-            compress_content=compress_content,
-            compressor=compressor
+            oreo_prompt, compress_content=compress_content, compressor=compressor
         )
         compression_time = time.time() - start_time
 
         # Build uncompressed version for comparison
-        uncompressed_prompt = self.build_full_prompt(oreo_prompt, compress_content=False)
+        uncompressed_prompt = self.build_full_prompt(
+            oreo_prompt, compress_content=False
+        )
 
         # Count tokens for each component
-        instructions_tokens = self.client.count_tokens(oreo_prompt.system_instructions) if oreo_prompt.system_instructions else 0
-        query_tokens = self.client.count_tokens(oreo_prompt.query) if oreo_prompt.query else 0
+        instructions_tokens = (
+            self.client.count_tokens(oreo_prompt.system_instructions)
+            if oreo_prompt.system_instructions
+            else 0
+        )
+        query_tokens = (
+            self.client.count_tokens(oreo_prompt.query) if oreo_prompt.query else 0
+        )
 
         # Content tokens (original and compressed)
         original_content_tokens = self.client.count_tokens(oreo_prompt.content)
@@ -135,25 +142,40 @@ class OreoExperiment:
             compressed_content_tokens = original_content_tokens
 
         # Total tokens
-        total_original_tokens = instructions_tokens + original_content_tokens + query_tokens
-        total_compressed_tokens = instructions_tokens + compressed_content_tokens + query_tokens
+        total_original_tokens = (
+            instructions_tokens + original_content_tokens + query_tokens
+        )
+        total_compressed_tokens = (
+            instructions_tokens + compressed_content_tokens + query_tokens
+        )
 
         # Send to LLM
         response, token_stats = self.client.send_prompt(full_prompt)
 
         # Calculate metrics
-        content_compression_ratio = len(compressed_content) / len(oreo_prompt.content) if len(oreo_prompt.content) > 0 else 1.0
+        content_compression_ratio = (
+            len(compressed_content) / len(oreo_prompt.content)
+            if len(oreo_prompt.content) > 0
+            else 1.0
+        )
         content_token_reduction = original_content_tokens - compressed_content_tokens
-        content_token_reduction_pct = (content_token_reduction / original_content_tokens * 100) if original_content_tokens > 0 else 0
+        content_token_reduction_pct = (
+            (content_token_reduction / original_content_tokens * 100)
+            if original_content_tokens > 0
+            else 0
+        )
 
         total_token_reduction = total_original_tokens - total_compressed_tokens
-        total_token_reduction_pct = (total_token_reduction / total_original_tokens * 100) if total_original_tokens > 0 else 0
+        total_token_reduction_pct = (
+            (total_token_reduction / total_original_tokens * 100)
+            if total_original_tokens > 0
+            else 0
+        )
 
         return {
             "method": method_name,
             "task_description": oreo_prompt.task_description,
             "compress_content": compress_content,
-
             # Component details
             "instructions_tokens": instructions_tokens,
             "query_tokens": query_tokens,
@@ -162,35 +184,33 @@ class OreoExperiment:
             "content_token_reduction": content_token_reduction,
             "content_token_reduction_pct": content_token_reduction_pct,
             "content_compression_ratio": content_compression_ratio,
-
             # Total metrics
             "total_original_tokens": total_original_tokens,
             "total_compressed_tokens": total_compressed_tokens,
             "total_token_reduction": total_token_reduction,
             "total_token_reduction_pct": total_token_reduction_pct,
-
             # LLM usage
             "input_tokens_used": token_stats["input_tokens"],
             "output_tokens_used": token_stats["output_tokens"],
             "total_tokens_used": token_stats["total_tokens"],
-
             # Timing
             "compression_time_sec": compression_time,
-
             # Full texts for analysis
             "original_prompt": uncompressed_prompt,
             "compressed_prompt": full_prompt,
             "response": response,
             "original_content": oreo_prompt.content,
-            "compressed_content": compressed_content if compress_content else oreo_prompt.content,
+            "compressed_content": compressed_content
+            if compress_content
+            else oreo_prompt.content,
         }
 
     def run_comparison(
         self,
-        oreo_prompts: List[OreoPrompt],
-        compression_methods: List[str] = None,
-        output_file: str = None
-    ) -> List[Dict[str, Any]]:
+        oreo_prompts: list[OreoPrompt],
+        compression_methods: list[str] = None,
+        output_file: str = None,
+    ) -> list[dict[str, Any]]:
         """
         Run Oreo comparison across multiple prompts and compression methods.
 
@@ -207,29 +227,31 @@ class OreoExperiment:
             List of all test results
         """
         if compression_methods is None:
-            compression_methods = ['caveman', 'llmlingua']
+            compression_methods = ["caveman", "llmlingua"]
 
         all_results = []
 
-        print(f"\n{'='*80}")
-        print(f"Starting Oreo Technique Experiment")
-        print(f"{'='*80}")
+        print(f"\n{'=' * 80}")
+        print("Starting Oreo Technique Experiment")
+        print(f"{'=' * 80}")
         print(f"Number of test prompts: {len(oreo_prompts)}")
         print(f"Compression methods: {', '.join(compression_methods)}")
         print(f"LLM Client: {self.client.__class__.__name__}")
-        print(f"{'='*80}\n")
+        print(f"{'=' * 80}\n")
 
         for idx, oreo_prompt in enumerate(oreo_prompts):
-            print(f"\n--- Test {idx + 1}/{len(oreo_prompts)}: {oreo_prompt.task_description} ---")
+            print(
+                f"\n--- Test {idx + 1}/{len(oreo_prompts)}: {oreo_prompt.task_description} ---"
+            )
 
             # First, run control (no compression)
-            print(f"\nControl: No compression")
+            print("\nControl: No compression")
             try:
                 control_result = self.run_single_test(
                     oreo_prompt=oreo_prompt,
-                    compressor=create_compressor('none'),
-                    method_name='none',
-                    compress_content=False
+                    compressor=create_compressor("none"),
+                    method_name="none",
+                    compress_content=False,
                 )
                 all_results.append(control_result)
 
@@ -246,7 +268,7 @@ class OreoExperiment:
                 print(f"\nOreo Technique: {method} (content only)")
 
                 # Create compressor
-                if method == 'llmlingua':
+                if method == "llmlingua":
                     compressor = create_compressor(method, rate=0.5)
                 else:
                     compressor = create_compressor(method)
@@ -256,16 +278,24 @@ class OreoExperiment:
                     result = self.run_single_test(
                         oreo_prompt=oreo_prompt,
                         compressor=compressor,
-                        method_name=f'{method}_oreo',
-                        compress_content=True
+                        method_name=f"{method}_oreo",
+                        compress_content=True,
                     )
                     all_results.append(result)
 
                     # Print summary
-                    print(f"  Content tokens: {result['original_content_tokens']} → {result['compressed_content_tokens']}")
-                    print(f"  Content reduction: {result['content_token_reduction_pct']:.1f}%")
-                    print(f"  Total tokens: {result['total_original_tokens']} → {result['total_compressed_tokens']}")
-                    print(f"  Total reduction: {result['total_token_reduction_pct']:.1f}%")
+                    print(
+                        f"  Content tokens: {result['original_content_tokens']} → {result['compressed_content_tokens']}"
+                    )
+                    print(
+                        f"  Content reduction: {result['content_token_reduction_pct']:.1f}%"
+                    )
+                    print(
+                        f"  Total tokens: {result['total_original_tokens']} → {result['total_compressed_tokens']}"
+                    )
+                    print(
+                        f"  Total reduction: {result['total_token_reduction_pct']:.1f}%"
+                    )
                     print(f"  Input tokens used: {result['input_tokens_used']}")
                     print(f"  Output tokens used: {result['output_tokens_used']}")
                     print(f"  Response length: {len(result['response'])} chars")
@@ -283,16 +313,16 @@ class OreoExperiment:
 
         return all_results
 
-    def _print_summary(self, results: List[Dict[str, Any]]):
+    def _print_summary(self, results: list[dict[str, Any]]):
         """Print summary statistics comparing control vs Oreo technique."""
-        print(f"\n{'='*80}")
+        print(f"\n{'=' * 80}")
         print("OREO EXPERIMENT SUMMARY")
-        print(f"{'='*80}\n")
+        print(f"{'=' * 80}\n")
 
         # Group by method
         by_method = {}
         for result in results:
-            method = result['method']
+            method = result["method"]
             if method not in by_method:
                 by_method[method] = []
             by_method[method].append(result)
@@ -303,10 +333,14 @@ class OreoExperiment:
             print("-" * 40)
 
             # Averages
-            avg_total_reduction = sum(r['total_token_reduction_pct'] for r in method_results) / len(method_results)
-            avg_compression_time = sum(r['compression_time_sec'] for r in method_results) / len(method_results)
-            total_input_tokens = sum(r['input_tokens_used'] for r in method_results)
-            total_output_tokens = sum(r['output_tokens_used'] for r in method_results)
+            avg_total_reduction = sum(
+                r["total_token_reduction_pct"] for r in method_results
+            ) / len(method_results)
+            avg_compression_time = sum(
+                r["compression_time_sec"] for r in method_results
+            ) / len(method_results)
+            total_input_tokens = sum(r["input_tokens_used"] for r in method_results)
+            total_output_tokens = sum(r["output_tokens_used"] for r in method_results)
 
             print(f"  Average total token reduction: {avg_total_reduction:.1f}%")
             print(f"  Average compression time: {avg_compression_time:.4f} sec")
@@ -315,26 +349,34 @@ class OreoExperiment:
             print(f"  Total tokens used: {total_input_tokens + total_output_tokens}")
 
             # If this is an Oreo method, show content-specific stats
-            if '_oreo' in method:
-                avg_content_reduction = sum(r['content_token_reduction_pct'] for r in method_results) / len(method_results)
-                avg_instructions_tokens = sum(r['instructions_tokens'] for r in method_results) / len(method_results)
-                avg_query_tokens = sum(r['query_tokens'] for r in method_results) / len(method_results)
+            if "_oreo" in method:
+                avg_content_reduction = sum(
+                    r["content_token_reduction_pct"] for r in method_results
+                ) / len(method_results)
+                avg_instructions_tokens = sum(
+                    r["instructions_tokens"] for r in method_results
+                ) / len(method_results)
+                avg_query_tokens = sum(r["query_tokens"] for r in method_results) / len(
+                    method_results
+                )
 
-                print(f"\n  Oreo Breakdown:")
+                print("\n  Oreo Breakdown:")
                 print(f"    Avg content reduction: {avg_content_reduction:.1f}%")
-                print(f"    Avg instruction tokens (preserved): {avg_instructions_tokens:.1f}")
+                print(
+                    f"    Avg instruction tokens (preserved): {avg_instructions_tokens:.1f}"
+                )
                 print(f"    Avg query tokens (preserved): {avg_query_tokens:.1f}")
 
-    def _save_results(self, results: List[Dict[str, Any]], output_file: str):
+    def _save_results(self, results: list[dict[str, Any]], output_file: str):
         """Save results to JSON file."""
         output_data = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "experiment_type": "oreo_technique",
             "client": self.client.__class__.__name__,
-            "results": results
+            "results": results,
         }
 
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(output_data, f, indent=2)
 
         print(f"\nResults saved to: {output_file}")
@@ -369,9 +411,8 @@ def main():
             by agreements like the Paris Climate Accord, plays a vital role in coordinating global efforts to limit
             temperature increases and adapt to unavoidable changes.
             """,
-            query="What is the main conclusion of this article?"
+            query="What is the main conclusion of this article?",
         ),
-
         OreoPrompt(
             task_description="Code Documentation Analysis",
             system_instructions="You are a code documentation expert. Answer in JSON format with keys: 'purpose', 'main_functions', 'complexity'.",
@@ -420,9 +461,8 @@ def main():
                 '''
                 return [calculate_fibonacci(i) for i in range(count)]
             """,
-            query="Summarize this code's purpose and main functions."
+            query="Summarize this code's purpose and main functions.",
         ),
-
         OreoPrompt(
             task_description="Product Review Summary",
             system_instructions="You are a review analyzer. Extract the key sentiment and main points. Be concise.",
@@ -449,7 +489,7 @@ def main():
             affected performance at all and is barely noticeable. For the price point, this is an exceptional value.
             I would highly recommend the UltraWidget Pro 3000 to anyone looking for a reliable, high-quality solution.
             """,
-            query="What is the overall sentiment and key points of this review?"
+            query="What is the overall sentiment and key points of this review?",
         ),
     ]
 
@@ -464,15 +504,16 @@ def main():
 
     # Run Oreo experiment
     experiment = OreoExperiment(client)
-    results = experiment.run_comparison(
+
+    experiment.run_comparison(
         oreo_prompts=oreo_prompts,
-        compression_methods=['caveman', 'llmlingua'],
-        output_file='oreo_experiment_results.json'
+        compression_methods=["caveman", "llmlingua"],
+        output_file="oreo_experiment_results.json",
     )
 
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print("Experiment complete! Check oreo_experiment_results.json for full details.")
-    print(f"{'='*80}\n")
+    print(f"{'=' * 80}\n")
 
 
 if __name__ == "__main__":
